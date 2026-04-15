@@ -21,6 +21,8 @@ app.use('/api/research', researchRoutes);
 app.get("/pubmed-test", researchRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Curalink Server active on port ${PORT}`));
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Curalink Server active on port ${PORT}`);
+});
 
 server.timeout = 300000;
