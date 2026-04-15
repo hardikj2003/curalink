@@ -1,3 +1,5 @@
+import http from "http";
+import https from "https";
 import axios from "axios";
 import { getMedicalData } from "./retrievalService.js";
 
@@ -54,8 +56,11 @@ async function callLLMWithRetry(
 ) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      const baseUrl = (
+        process.env.OLLAMA_BASE_URL || "http://localhost:11434"
+      ).replace(/\/$/, "");
       const res = await axios.post(
-        `${process.env.OLLAMA_BASE_URL || "http://localhost:11434"}/api/generate`,
+        `${baseUrl}/api/generate`,
         {
           model: model,
           prompt: prompt,
@@ -63,9 +68,9 @@ async function callLLMWithRetry(
           options: {
             temperature: 0.1,
             top_p: 0.85,
-            num_predict: 500, // small output
+            num_predict: 400, // shorter output
             repeat_penalty: 1.2,
-            num_ctx: 2048, // small context to save RAM
+            num_ctx: 2048, // keep small
           },
         },
         {
@@ -74,6 +79,8 @@ async function callLLMWithRetry(
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "true",
           },
+          httpAgent: new http.Agent({ keepAlive: true }),
+          httpsAgent: new https.Agent({ keepAlive: true }),
         },
       );
       const responseText = res.data.response.trim();

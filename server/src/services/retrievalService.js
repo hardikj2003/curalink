@@ -1,10 +1,17 @@
 import axios from "axios";
 import xml2js from "xml2js";
 import dns from "dns";
+import http from "http";
+import https from "https";
 import { getEmbedding, cosineSimilarity } from "./embeddingService.js";
 
 dns.setDefaultResultOrder("ipv4first");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+const httpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 1, // Force serial requests to avoid NCBI's "concurrency" block
+});
 
 // -------------------- HELPERS --------------------
 const safe = (val) => val || "Not available in provided data";
@@ -25,7 +32,7 @@ function expandForTrials(disease, query) {
   return { cond: disease, term: query };
 }
 // -------------------- PAGINATED PUBMED (with retries & error handling) --------------------
-async function fetchPubMedDeep(query, maxResults = 150) {
+async function fetchPubMedDeep(query, maxResults = 20) {
   const maxRetries = 3;
   let delay = 1000;
 
@@ -41,18 +48,22 @@ async function fetchPubMedDeep(query, maxResults = 150) {
           {
             params: {
               db: "pubmed",
+              api_key: process.env.NCBI_API_KEY,
               term: query,
               retstart: retStart,
               retmax: retMax,
               sort: "relevance",
               retmode: "json",
-              tool: "curalink", // Identify your tool
-              email: "contact@example.com", // NCBI requires email for heavy usage
+              tool: "curalink_app",
+              email: "hardikj2003@gmail.com",
             },
-            timeout: 15000,
+            timeout: 30000,
+            httpsAgent: httpsAgent,
             headers: {
               "User-Agent":
-                "CuraLink/1.0 (https://curalink.example.com; contact@example.com)",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) CuraLink/1.1",
+              Accept: "application/json",
+              Connection: "keep-alive",
             },
           },
         );
@@ -84,7 +95,7 @@ async function fetchPubMedDeep(query, maxResults = 150) {
               id: batchIds.join(","),
               retmode: "xml",
               tool: "curalink_hackathon", // 👈 Use a unique tool name
-              email: "your_real_email@gmail.com", // 👈 NCBI actually tracks this
+              email: "hardikj2003@gmail.com", // 👈 NCBI actually tracks this
             },
             timeout: 25000, // 👈 Increase timeout for deep fetches
             headers: { "User-Agent": "CuraLink-Research-Bot/1.0" },
@@ -242,7 +253,7 @@ async function fetchTrialsDeep(disease, query, maxResults = 100) {
     while (allTrials.length < maxResults) {
       const params = {
         "query.cond": disease,
-        "query.term": query.split(' ').slice(0, 3).join(' '),
+        "query.term": query.split(" ").slice(0, 3).join(" "),
         pageSize: pageSize,
         format: "json",
       };
