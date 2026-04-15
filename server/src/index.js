@@ -18,7 +18,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
   credentials: true
 }));
-app.options('*', cors());
+app.options('(.*)', cors());
 app.use(express.json());
 
 // Database
