@@ -68,7 +68,13 @@ async function callLLMWithRetry(
             num_ctx: 2048, // small context to save RAM
           },
         },
-        { timeout: 60000 },
+        {
+          timeout: 60000,
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+        },
       );
       const responseText = res.data.response.trim();
       if (

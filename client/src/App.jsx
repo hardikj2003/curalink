@@ -49,7 +49,7 @@ const App = () => {
       setPipeline({ step: 1 });
 
       const response = await axios.post(
-        "http://localhost:8000/api/research/search",
+        "https://curalink-backend-xbfz.onrender.com/api/research/search",
         {
           ...context,
           query: userQuery,
