@@ -1,0 +1,24 @@
+import dotenv from "dotenv"
+dotenv.config()
+import express from "express"
+import cors from "cors"
+import connectDB from'./config/db.js'
+import researchRoutes from './routes/research.js'
+import axios from "axios"
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Database
+connectDB();
+
+// Routes
+app.get('/health', (req, res) => res.status(200).json({ status: 'healthy' }));
+app.use('/api/research', researchRoutes);
+app.get("/pubmed-test", researchRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Curalink Server active on port ${PORT}`));
