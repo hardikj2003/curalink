@@ -25,4 +25,5 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Curalink Server active on port ${PORT}`);
 });
 
-server.timeout = 300000;
+server.keepAliveTimeout = 120000; // 120 seconds
+server.headersTimeout = 125000;

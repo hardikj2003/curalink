@@ -68,10 +68,14 @@ async function fetchPubMedDeep(query, maxResults = 150) {
       if (allIds.length === 0) return [];
 
       // Step 2: fetch details in batches (NCBI allows up to 200 IDs per request)
-      const batchSize = 200;
+      const batchSize = 50;
       const articles = [];
       for (let i = 0; i < allIds.length; i += batchSize) {
         const batchIds = allIds.slice(i, i + batchSize);
+
+        // 🔥 Add a small jittered delay before every batch
+        await new Promise((r) => setTimeout(r, 1000 + Math.random() * 500));
+
         const fetchRes = await axios.get(
           "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
           {
@@ -79,12 +83,11 @@ async function fetchPubMedDeep(query, maxResults = 150) {
               db: "pubmed",
               id: batchIds.join(","),
               retmode: "xml",
+              tool: "curalink_hackathon", // 👈 Use a unique tool name
+              email: "your_real_email@gmail.com", // 👈 NCBI actually tracks this
             },
-            timeout: 20000,
-            headers: {
-              "User-Agent":
-                "CuraLink/1.0 (https://curalink.example.com; contact@example.com)",
-            },
+            timeout: 25000, // 👈 Increase timeout for deep fetches
+            headers: { "User-Agent": "CuraLink-Research-Bot/1.0" },
           },
         );
         const parsed = await xml2js.parseStringPromise(fetchRes.data, {
@@ -239,14 +242,14 @@ async function fetchTrialsDeep(disease, query, maxResults = 100) {
     while (allTrials.length < maxResults) {
       const params = {
         "query.cond": disease,
-        "query.term": query,
+        "query.term": query.split(' ').slice(0, 3).join(' '),
         pageSize: pageSize,
         format: "json",
       };
       if (pageToken) params.pageToken = pageToken;
       const res = await axios.get("https://clinicaltrials.gov/api/v2/studies", {
         params,
-        timeout: 10000,
+        timeout: 15000,
       });
       const studies = res.data.studies || [];
       if (studies.length === 0) break;
